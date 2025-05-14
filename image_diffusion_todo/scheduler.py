@@ -86,7 +86,13 @@ class DDPMScheduler(BaseScheduler):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # Assignment 1. Implement the DDPM reverse step.
-        sample_prev = None
+        t = torch.tensor([t]).to(x_t.device)
+        mu = 1 / self._get_teeth(self.alphas_cumprod, t).sqrt() * \
+            (x_t - (self._get_teeth(1 - self.alphas_cumprod, t) / (1 - self._get_teeth(self.alphas_cumprod, t))).sqrt() * eps_theta)
+        
+        zt = torch.randn_like(x_t)
+
+        sample_prev = mu + self.sigmas[t] * zt
         #######################
         
         return sample_prev
@@ -120,7 +126,12 @@ class DDPMScheduler(BaseScheduler):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # Assignment 1. Implement the DDPM forward step.
-        x_t = None
+
+        # x_t = sqrt(alpha_t) * x_0 + sqrt(1 - alpha_t) * eps
+        x_t = (
+            self._get_teeth(self.alphas_cumprod, t).sqrt() * x_0
+            + self._get_teeth(1 - self.alphas_cumprod, t).sqrt() * eps
+        )
         #######################
 
         return x_t, eps
